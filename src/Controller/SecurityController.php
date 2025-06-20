@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Form\RegistrationFormType;
+use App\Service\EmailService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -36,8 +37,12 @@ class SecurityController extends AbstractController
     }
 
     #[Route('/register', name: 'app_register')]
-    public function register(Request $request, UserPasswordHasherInterface $userPasswordHasher, EntityManagerInterface $entityManager): Response
-    {
+    public function register(
+        Request $request, 
+        UserPasswordHasherInterface $userPasswordHasher, 
+        EntityManagerInterface $entityManager,
+        EmailService $emailService
+    ): Response {
         if ($this->getUser()) {
             return $this->redirectToRoute('app_dashboard');
         }
@@ -59,7 +64,14 @@ class SecurityController extends AbstractController
             $entityManager->persist($user);
             $entityManager->flush();
 
-            $this->addFlash('success', 'Votre compte a été créé avec succès !');
+            // Envoyer l'email de bienvenue
+            try {
+                $emailService->envoyerEmailBienvenue($user);
+                $this->addFlash('success', 'Votre compte a été créé avec succès ! Un email de bienvenue vous a été envoyé.');
+            } catch (\Exception $e) {
+                $this->addFlash('success', 'Votre compte a été créé avec succès !');
+                $this->addFlash('warning', 'L\'email de bienvenue n\'a pas pu être envoyé.');
+            }
 
             return $this->redirectToRoute('app_login');
         }

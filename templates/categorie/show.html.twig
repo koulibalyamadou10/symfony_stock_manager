@@ -1,0 +1,113 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ categorie.nom }}{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ path('app_dashboard') }}">Accueil</a></li>
+                    <li class="breadcrumb-item"><a href="{{ path('app_categorie_index') }}">Catégories</a></li>
+                    <li class="breadcrumb-item active">{{ categorie.nom }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">{{ categorie.nom }}</h4>
+                </div>
+                <div class="card-body">
+                    {% if categorie.description %}
+                        <h6>Description</h6>
+                        <p>{{ categorie.description }}</p>
+                    {% else %}
+                        <p class="text-muted">Aucune description disponible.</p>
+                    {% endif %}
+
+                    <h6>Statistiques</h6>
+                    <p><strong>Nombre de produits :</strong> {{ categorie.produits|length }}</p>
+                </div>
+            </div>
+
+            <!-- Liste des produits de cette catégorie -->
+            {% if categorie.produits|length > 0 %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Produits dans cette catégorie</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Nom</th>
+                                    <th>Prix</th>
+                                    <th>Stock</th>
+                                    <th>Statut</th>
+                                    <th>Propriétaire</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for produit in categorie.produits %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ path('app_produit_show', {'id': produit.id}) }}">
+                                            {{ produit.nom }}
+                                        </a>
+                                    </td>
+                                    <td>{{ produit.prix }}€</td>
+                                    <td>
+                                        <span class="badge bg-{{ produit.quantite > 5 ? 'success' : (produit.quantite > 0 ? 'warning' : 'danger') }}">
+                                            {{ produit.quantite }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if produit.actif %}
+                                            <span class="badge bg-success">Actif</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactif</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ produit.utilisateur.nom }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-gear"></i> Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ path('app_categorie_edit', {'id': categorie.id}) }}" 
+                           class="btn btn-warning">
+                            <i class="bi bi-pencil"></i> Modifier
+                        </a>
+                        
+                        <form method="post" action="{{ path('app_categorie_delete', {'id': categorie.id}) }}" 
+                              onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ?');">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ categorie.id) }}">
+                            <button class="btn btn-danger w-100">
+                                <i class="bi bi-trash"></i> Supprimer
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

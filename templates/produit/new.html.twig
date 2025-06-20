@@ -1,0 +1,75 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouveau produit{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ path('app_dashboard') }}">Accueil</a></li>
+                    <li class="breadcrumb-item"><a href="{{ path('app_produit_index') }}">Produits</a></li>
+                    <li class="breadcrumb-item active">Nouveau produit</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="bi bi-plus-circle"></i> Ajouter un nouveau produit
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {{ form_start(form) }}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form_label(form.nom) }}
+                                {{ form_widget(form.nom) }}
+                                {{ form_errors(form.nom) }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form_label(form.categorie) }}
+                                {{ form_widget(form.categorie) }}
+                                {{ form_errors(form.categorie) }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form_label(form.prix) }}
+                                {{ form_widget(form.prix) }}
+                                {{ form_errors(form.prix) }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form_label(form.quantite) }}
+                                {{ form_widget(form.quantite) }}
+                                {{ form_errors(form.quantite) }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            {{ form_widget(form.actif) }}
+                            {{ form_label(form.actif) }}
+                            {{ form_errors(form.actif) }}
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ path('app_produit_index') }}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Retour
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check"></i> Créer le produit
+                            </button>
+                        </div>
+                    {{ form_end(form) }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

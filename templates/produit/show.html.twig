@@ -1,0 +1,174 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ produit.nom }}{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ path('app_dashboard') }}">Accueil</a></li>
+                    <li class="breadcrumb-item"><a href="{{ path('app_produit_index') }}">Produits</a></li>
+                    <li class="breadcrumb-item active">{{ produit.nom }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">{{ produit.nom }}</h4>
+                    {% if produit.actif %}
+                        <span class="badge bg-success fs-6">Actif</span>
+                    {% else %}
+                        <span class="badge bg-danger fs-6">Inactif</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Informations générales</h6>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Catégorie:</strong></td>
+                                    <td>{{ produit.categorie.nom }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Prix:</strong></td>
+                                    <td class="text-success fs-5">{{ produit.prix }}€</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Quantité en stock:</strong></td>
+                                    <td>
+                                        <span class="badge bg-{{ produit.quantite > 5 ? 'success' : (produit.quantite > 0 ? 'warning' : 'danger') }} fs-6">
+                                            {{ produit.quantite }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Date d'ajout:</strong></td>
+                                    <td>{{ produit.dateAjout|date('d/m/Y à H:i') }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Propriétaire:</strong></td>
+                                    <td>{{ produit.utilisateur.nom }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            {% if produit.categorie.description %}
+                            <h6>Description de la catégorie</h6>
+                            <p class="text-muted">{{ produit.categorie.description }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Actions -->
+            {% if is_granted('ROLE_ADMIN') or produit.utilisateur == app.user %}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-gear"></i> Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ path('app_produit_edit', {'id': produit.id}) }}" 
+                           class="btn btn-warning">
+                            <i class="bi bi-pencil"></i> Modifier
+                        </a>
+                        
+                        {% if produit.quantite > 0 %}
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#venteModal">
+                            <i class="bi bi-cart-check"></i> Vendre
+                        </button>
+                        {% endif %}
+                        
+                        <form method="post" action="{{ path('app_produit_delete', {'id': produit.id}) }}" 
+                              onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce produit ?');">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ produit.id) }}">
+                            <button class="btn btn-danger w-100">
+                                <i class="bi bi-trash"></i> Supprimer
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Statistiques -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-graph-up"></i> Statistiques</h6>
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <div class="mb-3">
+                            <h4 class="text-primary">{{ produit.prix * produit.quantite }}€</h4>
+                            <small class="text-muted">Valeur totale du stock</small>
+                        </div>
+                        
+                        {% if produit.quantite <= 5 and produit.quantite > 0 %}
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            Stock faible !
+                        </div>
+                        {% elseif produit.quantite == 0 %}
+                        <div class="alert alert-danger">
+                            <i class="bi bi-x-circle"></i>
+                            Rupture de stock
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de vente -->
+{% if (is_granted('ROLE_ADMIN') or produit.utilisateur == app.user) and produit.quantite > 0 %}
+<div class="modal fade" id="venteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Vendre {{ produit.nom }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{{ path('app_produit_vendre', {'id': produit.id}) }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="quantite" class="form-label">Quantité à vendre</label>
+                        <input type="number" class="form-control" id="quantite" name="quantite" 
+                               min="1" max="{{ produit.quantite }}" value="1" required>
+                        <div class="form-text">Stock disponible: {{ produit.quantite }}</div>
+                    </div>
+                    <div class="alert alert-info">
+                        <strong>Prix unitaire:</strong> {{ produit.prix }}€<br>
+                        <strong>Total estimé:</strong> <span id="total">{{ produit.prix }}€</span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-success">Confirmer la vente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('quantite').addEventListener('input', function() {
+    const quantite = this.value;
+    const prix = {{ produit.prix }};
+    const total = quantite * prix;
+    document.getElementById('total').textContent = total.toFixed(2) + '€';
+});
+</script>
+{% endif %}
+{% endblock %}

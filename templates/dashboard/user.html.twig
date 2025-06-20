@@ -1,0 +1,114 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon tableau de bord{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">
+                <i class="bi bi-person-workspace"></i> Mon tableau de bord
+            </h1>
+        </div>
+    </div>
+
+    <!-- Statistiques personnelles -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="card stats-card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-box display-4 mb-3"></i>
+                    <h3>{{ mesProduits|length }}</h3>
+                    <p class="mb-0">Mes Produits</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card stats-card-success h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-check-circle display-4 mb-3"></i>
+                    <h3>{{ mesProduitsActifs|length }}</h3>
+                    <p class="mb-0">Produits Actifs</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions rapides -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-lightning"></i> Actions rapides</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <a href="{{ path('app_produit_new') }}" class="btn btn-primary w-100">
+                                <i class="bi bi-plus-circle"></i> Ajouter un Produit
+                            </a>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <a href="{{ path('app_produit_index') }}" class="btn btn-info w-100">
+                                <i class="bi bi-list"></i> Voir mes produits
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mes produits récents -->
+    {% if mesProduitsActifs|length > 0 %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock-history"></i> Mes produits récents
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for produit in mesProduitsActifs|slice(0, 6) %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ produit.nom }}</h6>
+                                    <p class="card-text">
+                                        <small class="text-muted">{{ produit.categorie.nom }}</small><br>
+                                        <strong>{{ produit.prix }}€</strong> - 
+                                        <span class="badge bg-{{ produit.quantite > 5 ? 'success' : 'warning' }}">
+                                            {{ produit.quantite }} en stock
+                                        </span>
+                                    </p>
+                                    <a href="{{ path('app_produit_show', {'id': produit.id}) }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> Voir
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="bi bi-info-circle display-4 mb-3"></i>
+                <h4>Aucun produit pour le moment</h4>
+                <p>Commencez par ajouter votre premier produit !</p>
+                <a href="{{ path('app_produit_new') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Ajouter un produit
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tableau de bord - Administrateur{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">
+                <i class="bi bi-speedometer2"></i> Tableau de bord - Administrateur
+            </h1>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-box display-4 mb-3"></i>
+                    <h3>{{ totalProduits }}</h3>
+                    <p class="mb-0">Total Produits</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card-success h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-check-circle display-4 mb-3"></i>
+                    <h3>{{ produitsActifs }}</h3>
+                    <p class="mb-0">Produits Actifs</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card-info h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-tags display-4 mb-3"></i>
+                    <h3>{{ totalCategories }}</h3>
+                    <p class="mb-0">Catégories</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card-warning h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-people display-4 mb-3"></i>
+                    <h3>{{ totalUtilisateurs }}</h3>
+                    <p class="mb-0">Utilisateurs</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions rapides -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-lightning"></i> Actions rapides</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-2">
+                            <a href="{{ path('app_produit_new') }}" class="btn btn-primary w-100">
+                                <i class="bi bi-plus-circle"></i> Nouveau Produit
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <a href="{{ path('app_categorie_new') }}" class="btn btn-success w-100">
+                                <i class="bi bi-plus-circle"></i> Nouvelle Catégorie
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <a href="{{ path('app_produit_index') }}" class="btn btn-info w-100">
+                                <i class="bi bi-list"></i> Voir tous les produits
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Produits en rupture de stock -->
+    {% if ruptureStock|length > 0 %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-exclamation-triangle"></i> 
+                        Produits en rupture de stock ({{ ruptureStock|length }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Produit</th>
+                                    <th>Catégorie</th>
+                                    <th>Quantité</th>
+                                    <th>Utilisateur</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for produit in ruptureStock %}
+                                <tr>
+                                    <td>{{ produit.nom }}</td>
+                                    <td>{{ produit.categorie.nom }}</td>
+                                    <td><span class="badge bg-danger">{{ produit.quantite }}</span></td>
+                                    <td>{{ produit.utilisateur.nom }}</td>
+                                    <td>
+                                        <a href="{{ path('app_produit_show', {'id': produit.id}) }}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{{ path('app_produit_edit', {'id': produit.id}) }}" 
+                                           class="btn btn-sm btn-outline-warning">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

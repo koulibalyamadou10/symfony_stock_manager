@@ -1,0 +1,80 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier {{ produit.nom }}{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ path('app_dashboard') }}">Accueil</a></li>
+                    <li class="breadcrumb-item"><a href="{{ path('app_produit_index') }}">Produits</a></li>
+                    <li class="breadcrumb-item"><a href="{{ path('app_produit_show', {'id': produit.id}) }}">{{ produit.nom }}</a></li>
+                    <li class="breadcrumb-item active">Modifier</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="bi bi-pencil"></i> Modifier {{ produit.nom }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {{ form_start(form) }}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form_label(form.nom) }}
+                                {{ form_widget(form.nom) }}
+                                {{ form_errors(form.nom) }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form_label(form.categorie) }}
+                                {{ form_widget(form.categorie) }}
+                                {{ form_errors(form.categorie) }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form_label(form.prix) }}
+                                {{ form_widget(form.prix) }}
+                                {{ form_errors(form.prix) }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form_label(form.quantite) }}
+                                {{ form_widget(form.quantite) }}
+                                {{ form_errors(form.quantite) }}
+                                <div class="form-text">
+                                    <i class="bi bi-info-circle"></i> 
+                                    Si vous mettez la quantité à 0, le produit sera automatiquement désactivé.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            {{ form_widget(form.actif) }}
+                            {{ form_label(form.actif) }}
+                            {{ form_errors(form.actif) }}
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ path('app_produit_show', {'id': produit.id}) }}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Retour
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check"></i> Sauvegarder
+                            </button>
+                        </div>
+                    {{ form_end(form) }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

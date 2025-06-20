@@ -1,0 +1,55 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouvel utilisateur{% endblock %}
+
+{% block body %}
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h1 class="card-title mb-0">Créer un nouvel utilisateur</h1>
+                    </div>
+                    <div class="card-body">
+                        {{ form_start(form) }}
+                            <div class="mb-3">
+                                {{ form_label(form.nom) }}
+                                {{ form_widget(form.nom) }}
+                                {{ form_errors(form.nom) }}
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form_label(form.email) }}
+                                {{ form_widget(form.email) }}
+                                {{ form_errors(form.email) }}
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form_label(form.password) }}
+                                {{ form_widget(form.password) }}
+                                {{ form_errors(form.password) }}
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form_label(form.roles) }}
+                                <div class="mt-2">
+                                    {{ form_widget(form.roles) }}
+                                </div>
+                                {{ form_errors(form.roles) }}
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <a href="{{ path('app_user_index') }}" class="btn btn-secondary">
+                                    <i class="fas fa-chevron-left"></i> Retour à la liste
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-user-plus"></i> Créer l'utilisateur
+                                </button>
+                            </div>
+                        {{ form_end(form) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

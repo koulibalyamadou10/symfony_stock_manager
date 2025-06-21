@@ -6,6 +6,7 @@ use App\Entity\User;
 use App\Form\UserType;
 use App\Repository\UserRepository;
 use App\Service\EmailService;
+use App\Service\PasswordGenerator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -31,18 +32,19 @@ class UserController extends AbstractController
         Request $request, 
         EntityManagerInterface $entityManager, 
         UserPasswordHasherInterface $userPasswordHasher,
-        EmailService $emailService
+        EmailService $emailService,
+        PasswordGenerator $passwordGenerator
     ): Response {
         $user = new User();
-        $form = $this->createForm(UserType::class, $user, ['is_edit' => false]);
+        $form = $this->createForm(UserType::class, $user);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // Générer un mot de passe temporaire
-            $motDePasseTemporaire = $this->genererMotDePasseTemporaire();
+            // Générer un mot de passe sécurisé
+            $motDePasse = $passwordGenerator->generate();
             
             // Hasher le mot de passe
-            $user->setPassword($userPasswordHasher->hashPassword($user, $motDePasseTemporaire));
+            $user->setPassword($userPasswordHasher->hashPassword($user, $motDePasse));
 
             // S'assurer qu'il y a au moins ROLE_USER
             $roles = $user->getRoles();
@@ -55,11 +57,11 @@ class UserController extends AbstractController
 
             // Envoyer les identifiants par email
             try {
-                $emailService->envoyerCredentiels($user, $motDePasseTemporaire);
-                $this->addFlash('success', 'L\'utilisateur a été créé avec succès. Ses identifiants lui ont été envoyés par email.');
+                $emailService->envoyerCredentiels($user, $motDePasse);
+                $this->addFlash('success', 'L\'utilisateur a été créé avec succès. Les identifiants ont été envoyés par email.');
             } catch (\Exception $e) {
                 $this->addFlash('success', 'L\'utilisateur a été créé avec succès.');
-                $this->addFlash('warning', 'L\'email avec les identifiants n\'a pas pu être envoyé. Mot de passe temporaire : ' . $motDePasseTemporaire);
+                $this->addFlash('warning', 'L\'envoi de l\'email a échoué. Mot de passe temporaire : ' . $motDePasse);
             }
 
             return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);
@@ -124,18 +126,4 @@ class UserController extends AbstractController
         return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);
     }
 
-    /**
-     * Génère un mot de passe temporaire sécurisé
-     */
-    private function genererMotDePasseTemporaire(): string
-    {
-        $caracteres = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%';
-        $motDePasse = '';
-        
-        for ($i = 0; $i < 12; $i++) {
-            $motDePasse .= $caracteres[random_int(0, strlen($caracteres) - 1)];
-        }
-        
-        return $motDePasse;
-    }
 }

@@ -3,91 +3,81 @@
 namespace App\Service;
 
 use App\Entity\User;
-use App\Entity\Produit;
-use App\Repository\UserRepository;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Symfony\Component\Mime\Address;
 use Twig\Environment;
 
 class EmailService
 {
-    public function __construct(
-        private MailerInterface $mailer,
-        private Environment $twig,
-        private ParameterBagInterface $parameterBag,
-        private UserRepository $userRepository
-    ) {}
+    private MailerInterface $mailer;
+    private string $senderEmail;
+    private string $senderName;
 
-    /**
-     * Envoie un email de bienvenue après inscription
-     */
-    public function envoyerEmailBienvenue(User $user): void
+    public function __construct(MailerInterface $mailer, private Environment $twig)
+    {
+        $this->mailer = $mailer;
+        $this->senderEmail = 'contact@morykoulibaly.me';
+        $this->senderName = 'Gestion de Stock';
+    }
+
+    public function sendWelcomeEmail(string $to, string $name): void
     {
         $email = (new Email())
-            ->from($_ENV['MAILER_FROM_EMAIL'])
-            ->to($user->getEmail())
-            ->subject('Bienvenue sur la plateforme de Gestion de Stock - UGANC')
-            ->html($this->twig->render('emails/bienvenue.html.twig', [
-                'user' => $user
-            ]));
+            ->from(new Address($this->senderEmail, $this->senderName))
+            ->to($to)
+            ->subject('Bienvenue sur l\'application de Gestion de Stock')
+            ->html($this->getWelcomeTemplate($name));
 
         $this->mailer->send($email);
     }
 
-    /**
-     * Envoie les identifiants de connexion à un nouvel utilisateur créé par l'admin
-     */
-    public function envoyerCredentiels(User $user, string $motDePasseTemporaire): void
+    public function sendPasswordResetEmail(string $to, string $resetLink): void
     {
         $email = (new Email())
-            ->from($_ENV['MAILER_FROM_EMAIL'])
-            ->to($user->getEmail())
-            ->subject('Vos identifiants de connexion - Gestion de Stock UGANC')
-            ->html($this->twig->render('emails/credentials.html.twig', [
-                'user' => $user,
-                'motDePasse' => $motDePasseTemporaire
-            ]));
+            ->from(new Address($this->senderEmail, $this->senderName))
+            ->to($to)
+            ->subject('Réinitialisation de votre mot de passe')
+            ->html($this->getPasswordResetTemplate($resetLink));
 
         $this->mailer->send($email);
     }
 
-    /**
-     * Envoie une alerte de stock faible
-     */
-    public function envoyerAlerteStockFaible(array $produitsEnRupture): void
+    private function getWelcomeTemplate(string $name): string
     {
-        // Récupérer tous les administrateurs
-        $admins = $this->userRepository->findAdministrateurs();
-
-        foreach ($admins as $admin) {
-            $email = (new Email())
-                ->from($_ENV['MAILER_FROM_EMAIL'])
-                ->to($admin->getEmail())
-                ->subject('🚨 Alerte Stock - Produits à réapprovisionner')
-                ->html($this->twig->render('emails/alerte_stock.html.twig', [
-                    'admin' => $admin,
-                    'produits' => $produitsEnRupture
-                ]));
-
-            $this->mailer->send($email);
-        }
+        return "
+            <h1>Bienvenue {$name} !</h1>
+            <p>Votre compte a été créé avec succès sur notre application de gestion de stock.</p>
+            <p>Vous pouvez maintenant vous connecter et commencer à utiliser l'application.</p>
+            <p>Cordialement,<br>L'équipe de Gestion de Stock</p>
+        ";
     }
 
-    /**
-     * Envoie une notification de vente
-     */
-    public function envoyerNotificationVente(Produit $produit, int $quantiteVendue, User $vendeur): void
+    private function getPasswordResetTemplate(string $resetLink): string
     {
+        return "
+            <h1>Réinitialisation de votre mot de passe</h1>
+            <p>Vous avez demandé la réinitialisation de votre mot de passe.</p>
+            <p>Cliquez sur le lien ci-dessous pour définir un nouveau mot de passe :</p>
+            <p><a href='{$resetLink}'>Réinitialiser mon mot de passe</a></p>
+            <p>Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.</p>
+            <p>Cordialement,<br>L'équipe de Gestion de Stock</p>
+        ";
+    }
+
+    public function envoyerCredentiels(User $user, string $motDePasse): void
+    {
+        $htmlContent = $this->twig->render('emails/credentials.html.twig', [
+            'nom' => $user->getNom(),
+            'email' => $user->getEmail(),
+            'motDePasse' => $motDePasse,
+        ]);
+
         $email = (new Email())
-            ->from($_ENV['MAILER_FROM_EMAIL'])
-            ->to($produit->getUtilisateur()->getEmail())
-            ->subject('Vente effectuée - ' . $produit->getNom())
-            ->html($this->twig->render('emails/notification_vente.html.twig', [
-                'produit' => $produit,
-                'quantiteVendue' => $quantiteVendue,
-                'vendeur' => $vendeur
-            ]));
+            ->from(new Address($this->senderEmail, $this->senderName))
+            ->to($user->getEmail())
+            ->subject('Vos identifiants de connexion - Gestion de Stock')
+            ->html($htmlContent);
 
         $this->mailer->send($email);
     }

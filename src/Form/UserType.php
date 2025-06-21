@@ -37,23 +37,8 @@ class UserType extends AbstractType
                 'attr' => ['class' => 'mt-2']
             ]);
 
-        // Ajouter le champ password uniquement pour la création
-        if (!$options['is_edit']) {
-            $builder->add('password', PasswordType::class, [
-                'label' => 'Mot de passe',
-                'attr' => ['class' => 'form-control'],
-                'constraints' => [
-                    new NotBlank([
-                        'message' => 'Veuillez entrer un mot de passe',
-                    ]),
-                    new Length([
-                        'min' => 6,
-                        'minMessage' => 'Le mot de passe doit contenir au moins {{ limit }} caractères',
-                        'max' => 4096,
-                    ]),
-                ],
-            ]);
-        }
+        // Le mot de passe sera généré automatiquement
+        // Pas besoin de champ password dans le formulaire
     }
 
     public function configureOptions(OptionsResolver $resolver): void

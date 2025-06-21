@@ -72,11 +72,11 @@ class SubscriptionService
         $this->entityManager->persist($subscription);
         $this->entityManager->flush();
 
+
         $this->logger->info('Nouvel abonnement créé', [
             'user_id' => $user->getId(),
             'subscription_id' => $subscription->getId()
         ]);
-
         return $subscription;
     }
 
@@ -90,7 +90,7 @@ class SubscriptionService
 
             $returnUrl = $this->urlGenerator->generate('app_subscription_success', [], UrlGeneratorInterface::ABSOLUTE_URL);
             $callbackUrl = $this->urlGenerator->generate('app_subscription_callback', [], UrlGeneratorInterface::ABSOLUTE_URL);
-
+            dd($subscription, $returnUrl, $callbackUrl);
             $paymentResult = $this->lengoPayService->createPaymentUrl(
                 $this->subscriptionAmount,
                 $returnUrl,

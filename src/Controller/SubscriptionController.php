@@ -53,10 +53,8 @@ class SubscriptionController extends AbstractController
             $this->addFlash('info', 'Vous avez déjà un abonnement actif.');
             return $this->redirectToRoute('app_dashboard');
         }
-
         try {
             $result = $this->subscriptionService->initiatePayment($user);
-
             if ($result['success']) {
                 $this->logger->info('Redirection vers Lengo Pay', [
                     'user_id' => $user->getId(),

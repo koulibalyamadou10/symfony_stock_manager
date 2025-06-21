@@ -14,6 +14,7 @@
 
 **Projet académique** réalisé dans le cadre de la Licence 3 à l’Université Gamal Abdel Nasser de Conakry (UGANC), Faculté du Centre Informatique.
 
+
 - **Technologie principale** : Symfony 7
 - **Durée estimée** : 2 à 3 jours
 - **Auteur** : Koulibaly Amadou

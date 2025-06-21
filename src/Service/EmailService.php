@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Entity\Subscription;
 use App\Entity\User;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
@@ -77,6 +78,53 @@ class EmailService
             ->from(new Address($this->senderEmail, $this->senderName))
             ->to($user->getEmail())
             ->subject('Vos identifiants de connexion - Gestion de Stock')
+            ->html($htmlContent);
+
+        $this->mailer->send($email);
+    }
+
+    public function envoyerEmailBienvenue(User $user): void
+    {
+        $htmlContent = $this->twig->render('emails/bienvenue.html.twig', [
+            'user' => $user,
+        ]);
+
+        $email = (new Email())
+            ->from(new Address($this->senderEmail, $this->senderName))
+            ->to($user->getEmail())
+            ->subject('Bienvenue sur Gestion de Stock !')
+            ->html($htmlContent);
+
+        $this->mailer->send($email);
+    }
+
+    public function envoyerConfirmationAbonnement(User $user, Subscription $subscription): void
+    {
+        $htmlContent = $this->twig->render('emails/confirmation_abonnement.html.twig', [
+            'user' => $user,
+            'subscription' => $subscription,
+        ]);
+
+        $email = (new Email())
+            ->from(new Address($this->senderEmail, $this->senderName))
+            ->to($user->getEmail())
+            ->subject('Confirmation de votre abonnement - Gestion de Stock')
+            ->html($htmlContent);
+
+        $this->mailer->send($email);
+    }
+
+    public function envoyerRappelExpiration(User $user, Subscription $subscription): void
+    {
+        $htmlContent = $this->twig->render('emails/rappel_expiration.html.twig', [
+            'user' => $user,
+            'subscription' => $subscription,
+        ]);
+
+        $email = (new Email())
+            ->from(new Address($this->senderEmail, $this->senderName))
+            ->to($user->getEmail())
+            ->subject('Votre abonnement expire bientôt - Gestion de Stock')
             ->html($htmlContent);
 
         $this->mailer->send($email);

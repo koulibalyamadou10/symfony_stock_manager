@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Application Gestion de Stock UGANC</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .test-card {
+            transition: transform 0.2s;
+        }
+        .test-card:hover {
+            transform: translateY(-2px);
+        }
+        .status-success {
+            color: #28a745;
+        }
+        .status-error {
+            color: #dc3545;
+        }
+        .status-warning {
+            color: #ffc107;
+        }
+        .test-result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        .result-success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .result-error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 3rem 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="hero-section">
+        <div class="container text-center">
+            <h1><i class="bi bi-box-seam"></i> Test - Application Gestion de Stock</h1>
+            <p class="lead">Université Gamal Abdel Nasser de Conakry - Centre Informatique</p>
+            <p>Projet académique Licence 3 - Koulibaly Amadou</p>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        <!-- Statistiques générales -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-graph-up"></i> Statistiques du système</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row" id="stats-container">
+                            <div class="col-12 text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Chargement...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tests des fonctionnalités -->
+        <div class="row">
+            <!-- Test 1: Gestion des utilisateurs -->
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card test-card h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-people"></i> Gestion des Utilisateurs</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Test de récupération et gestion des utilisateurs avec rôles.</p>
+                        <button class="btn btn-primary btn-sm" onclick="testUsers()">
+                            <i class="bi bi-play"></i> Tester
+                        </button>
+                        <div id="test-users-result" class="test-result" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test 2: Gestion des catégories -->
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card test-card h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-tags"></i> Gestion des Catégories</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Test de récupération des catégories de produits.</p>
+                        <button class="btn btn-primary btn-sm" onclick="testCategories()">
+                            <i class="bi bi-play"></i> Tester
+                        </button>
+                        <div id="test-categories-result" class="test-result" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test 3: Gestion des produits -->
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card test-card h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-box"></i> Gestion des Produits</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Test de récupération et gestion des produits avec stock.</p>
+                        <button class="btn btn-primary btn-sm" onclick="testProduits()">
+                            <i class="bi bi-play"></i> Tester
+                        </button>
+                        <div id="test-produits-result" class="test-result" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test 4: Système d'abonnement -->
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card test-card h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-credit-card"></i> Système d'Abonnement</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Test du système d'abonnement mensuel (50 000 GNF).</p>
+                        <button class="btn btn-primary btn-sm" onclick="testAbonnements()">
+                            <i class="bi bi-play"></i> Tester
+                        </button>
+                        <div id="test-abonnements-result" class="test-result" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test 5: Création de produit -->
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card test-card h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-plus-circle"></i> Création de Produit</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Test de création d'un nouveau produit.</p>
+                        <button class="btn btn-success btn-sm" onclick="testCreateProduit()">
+                            <i class="bi bi-play"></i> Tester
+                        </button>
+                        <div id="test-create-result" class="test-result" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test 6: Vente de produit -->
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card test-card h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-cart-check"></i> Vente de Produit</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Test de vente avec mise à jour automatique du stock.</p>
+                        <button class="btn btn-warning btn-sm" onclick="testVenteProduit()">
+                            <i class="bi bi-play"></i> Tester
+                        </button>
+                        <div id="test-vente-result" class="test-result" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test 7: Paiement d'abonnement -->
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card test-card h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-credit-card-2-front"></i> Paiement Lengo Pay</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Test de simulation de paiement via Lengo Pay.</p>
+                        <button class="btn btn-info btn-sm" onclick="testPaiementAbonnement()">
+                            <i class="bi bi-play"></i> Tester
+                        </button>
+                        <div id="test-paiement-result" class="test-result" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test 8: Vérification d'abonnement -->
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card test-card h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-shield-check"></i> Vérification Abonnement</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Test de vérification du statut d'abonnement utilisateur.</p>
+                        <button class="btn btn-secondary btn-sm" onclick="testVerificationAbonnement()">
+                            <i class="bi bi-play"></i> Tester
+                        </button>
+                        <div id="test-verification-result" class="test-result" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test global -->
+            <div class="col-12 mb-4">
+                <div class="card border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-lightning"></i> Test Global de l'Application</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Exécute tous les tests en séquence pour vérifier l'ensemble des fonctionnalités.</p>
+                        <button class="btn btn-primary" onclick="runAllTests()">
+                            <i class="bi bi-play-circle"></i> Lancer tous les tests
+                        </button>
+                        <div id="global-test-result" class="test-result" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Résumé des technologies -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-gear"></i> Technologies utilisées</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Backend (Symfony 7)</h6>
+                                <ul>
+                                    <li>PHP 8.2+</li>
+                                    <li>Doctrine ORM</li>
+                                    <li>Symfony Security</li>
+                                    <li>Twig Templates</li>
+                                    <li>Symfony Mailer</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Frontend & Intégrations</h6>
+                                <ul>
+                                    <li>Bootstrap 5</li>
+                                    <li>Stimulus (Hotwired)</li>
+                                    <li>API Lengo Pay</li>
+                                    <li>PostgreSQL/MySQL</li>
+                                    <li>Docker (optionnel)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-light py-3 mt-5">
+        <div class="container text-center">
+            <p class="text-muted mb-0">
+                © 2025 Université Gamal Abdel Nasser de Conakry - Centre Informatique<br>
+                <small>Projet académique Licence 3 - Développé par Koulibaly Amadou</small>
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="test-functions.js"></script>
+</body>
+</html>

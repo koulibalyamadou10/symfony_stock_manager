@@ -1,0 +1,15 @@
+{
+  "name": "symfony-stock-manager-test",
+  "version": "1.0.0",
+  "description": "Test environment for Symfony Stock Management Application",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node server.js",
+    "test": "echo \"Testing Symfony application features\" && node test-features.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "body-parser": "^1.20.2"
+  }
+}

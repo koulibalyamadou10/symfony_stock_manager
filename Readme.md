@@ -1,5 +1,17 @@
 # 📦 Application de Gestion de Stock
 
+## 🖼️ Images illustratives
+
+### Image 1
+![Image 1](public/images/1.png)
+
+### Image 2
+![Image 2](public/images/2.png)
+
+### Image 3
+![Image 3](public/images/3.png)
+
+
 **Projet académique** réalisé dans le cadre de la Licence 3 à l’Université Gamal Abdel Nasser de Conakry (UGANC), Faculté du Centre Informatique.
 
 - **Technologie principale** : Symfony 7

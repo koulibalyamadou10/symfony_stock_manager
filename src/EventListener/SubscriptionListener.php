@@ -3,12 +3,13 @@
 namespace App\EventListener;
 
 use App\Service\SubscriptionService;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Symfony\Component\Security\Core\Security;
+
 
 #[AsEventListener(event: KernelEvents::REQUEST, priority: 10)]
 class SubscriptionListener

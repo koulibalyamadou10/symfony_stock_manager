@@ -17,6 +17,7 @@ Développer une application web intuitive et sécurisée permettant :
 
 ---
 
+
 ## 🧩 Description Générale
 
 L'application est structurée autour de deux rôles :

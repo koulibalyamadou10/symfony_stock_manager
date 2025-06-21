@@ -1,6 +1,10 @@
 parameters:
-    lengo_pay.api_key: '%env(LENGO_PAY_API_KEY)%'
-    lengo_pay.merchant_id: '%env(LENGO_PAY_MERCHANT_ID)%'
+    lengo_pay.license_key: '%env(LENGO_PAY_LICENSE_KEY)%'
+    lengo_pay.website_id: '%env(LENGO_PAY_WEBSITE_ID)%'
+    lengo_pay.api_url: '%env(LENGO_PAY_API_URL)%'
+    lengo_pay.currency: '%env(LENGO_PAY_CURRENCY)%'
+    app.url: '%env(APP_URL)%'
+    subscription.amount: '%env(int:SUBSCRIPTION_AMOUNT)%'
 
 services:
     _defaults:
@@ -13,3 +17,15 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+
+    App\Service\LengoPayService:
+        arguments:
+            $licenseKey: '%lengo_pay.license_key%'
+            $websiteId: '%lengo_pay.website_id%'
+            $apiUrl: '%lengo_pay.api_url%'
+            $currency: '%lengo_pay.currency%'
+            $appUrl: '%app.url%'
+
+    App\Service\SubscriptionService:
+        arguments:
+            $subscriptionAmount: '%subscription.amount%'

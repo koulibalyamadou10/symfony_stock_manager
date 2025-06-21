@@ -63,7 +63,7 @@ class Subscription
         return $this->user;
     }
 
-    public function setUser(User $user): static
+    public function setUser(?User $user): static
     {
         $this->user = $user;
         return $this;
@@ -206,7 +206,10 @@ class Subscription
             $this->startDate = new \DateTime();
             $this->endDate = new \DateTime('+1 month');
         } else {
-            $this->endDate = $this->endDate->modify('+1 month');
+            // Create a new DateTime from the existing endDate and add 1 month
+            $newEndDate = \DateTime::createFromInterface($this->endDate);
+            $newEndDate->modify('+1 month');
+            $this->endDate = $newEndDate;
         }
         $this->isActive = true;
         $this->status = 'active';

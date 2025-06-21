@@ -70,7 +70,6 @@ class SubscriptionService
         $subscription->setAmount((string) $this->subscriptionAmount);
 
         $this->entityManager->persist($subscription);
-        $this->entityManager->flush();
 
 
         $this->logger->info('Nouvel abonnement créé', [
@@ -90,7 +89,7 @@ class SubscriptionService
 
             $returnUrl = $this->urlGenerator->generate('app_subscription_success', [], UrlGeneratorInterface::ABSOLUTE_URL);
             $callbackUrl = $this->urlGenerator->generate('app_subscription_callback', [], UrlGeneratorInterface::ABSOLUTE_URL);
-            dd($subscription, $returnUrl, $callbackUrl);
+            
             $paymentResult = $this->lengoPayService->createPaymentUrl(
                 $this->subscriptionAmount,
                 $returnUrl,
@@ -98,8 +97,10 @@ class SubscriptionService
             );
 
             if ($paymentResult['success']) {
+                
                 $subscription->setPaymentId($paymentResult['pay_id']);
-                $this->entityManager->flush();
+                // $this->entityManager->flush();
+                // dd($paymentResult, 'result');
 
                 $this->logger->info('Paiement initié avec succès', [
                     'user_id' => $user->getId(),

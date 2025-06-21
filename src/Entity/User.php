@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use App\Entity\Subscription;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -54,6 +55,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     #[ORM\OneToMany(targetEntity: Abonnement::class, mappedBy: 'utilisateur')]
     private Collection $abonnements;
+
+    #[ORM\OneToOne(mappedBy: 'user', cascade: ['persist', 'remove'])]
+    private ?Subscription $subscription = null;
 
     public function __construct()
     {
@@ -252,6 +256,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $abonnement ? $abonnement->getDateFin() : null;
     }
 
+    public function getSubscription(): ?Subscription
+    {
+        return $this->subscription;
+    }
+
+    public function setSubscription(?Subscription $subscription): static
+    {
+        // Unset the owning side of the relation if necessary
+        if ($subscription === null && $this->subscription !== null) {
+            $this->subscription->setUser(null);
+        }
+
+        // Set the owning side of the relation if necessary
+        if ($subscription !== null && $subscription->getUser() !== $this) {
+            $subscription->setUser($this);
+        }
+
+        $this->subscription = $subscription;
+
+        return $this;
+    }
+
+    /**
+     * Vérifie si l'utilisateur a un abonnement actif (nouveau système)
+     */
+    public function hasActiveSubscription(): bool
+    {
+        return $this->subscription !== null && $this->subscription->isActive();
+    }
+
     /**
      * Vérifie si l'utilisateur peut accéder aux fonctionnalités premium
      */
@@ -262,7 +296,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             return true;
         }
 
-        // Les autres utilisateurs doivent avoir un abonnement actif
+        // Vérifier le nouveau système d'abonnement en priorité
+        if ($this->hasActiveSubscription()) {
+            return true;
+        }
+
+        // Fallback sur l'ancien système d'abonnement
         return $this->hasAbonnementActif();
     }
 

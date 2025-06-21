@@ -57,8 +57,9 @@ class LengoPayService
             ];
 
             $response = $this->httpClient->request('POST', $this->apiUrl, [
+
                 'headers' => [
-                    'Authorization' => 'Basic ' . base64_encode($this->licenseKey),
+                    'Authorization' => 'Basic ' . $this->licenseKey,
                     'Accept' => 'application/json',
                     'Content-Type' => 'application/json',
                 ],
@@ -74,7 +75,8 @@ class LengoPayService
                 'response' => $data
             ]);
 
-            if ($statusCode === 200 && isset($data['status']) && $data['status'] === 'success') {
+
+            if ($statusCode === 200 && isset($data['status']) && $data['status'] === 'Success') {
                 return [
                     'success' => true,
                     'pay_id' => $data['pay_id'],

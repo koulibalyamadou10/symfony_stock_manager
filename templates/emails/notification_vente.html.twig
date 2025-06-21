@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notification de vente</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+        }
+        .content {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 0 0 10px 10px;
+        }
+        .sale-box {
+            background: white;
+            border: 2px solid #28a745;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .btn {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>💰 Vente Effectuée</h1>
+        <p>Notification de vente de votre produit</p>
+    </div>
+    
+    <div class="content">
+        <h2>Bonjour {{ produit.utilisateur.nom }},</h2>
+        <p>Une vente vient d'être effectuée sur l'un de vos produits.</p>
+        
+        <div class="sale-box">
+            <h3>📦 Détails de la vente :</h3>
+            <p><strong>Produit :</strong> {{ produit.nom }}</p>
+            <p><strong>Quantité vendue :</strong> {{ quantiteVendue }} unité(s)</p>
+            <p><strong>Prix unitaire :</strong> {{ produit.prix }}€</p>
+            <p><strong>Total de la vente :</strong> <span style="color: #28a745; font-size: 1.2em; font-weight: bold;">{{ (produit.prix * quantiteVendue)|number_format(2, ',', ' ') }}€</span></p>
+            <p><strong>Stock restant :</strong> {{ produit.quantite }} unité(s)</p>
+            <p><strong>Vendu par :</strong> {{ vendeur.nom }}</p>
+            <p><strong>Date :</strong> {{ "now"|date("d/m/Y à H:i") }}</p>
+        </div>
+
+        {% if produit.quantite <= 5 %}
+        <div style="background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <strong>⚠️ Attention :</strong> Le stock de ce produit est maintenant faible ({{ produit.quantite }} unité(s) restante(s)). 
+            Pensez à le réapprovisionner bientôt.
+        </div>
+        {% endif %}
+
+        {% if produit.quantite == 0 %}
+        <div style="background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <strong>🚨 Rupture de stock !</strong> Ce produit n'est plus disponible. Il a été automatiquement désactivé.
+        </div>
+        {% endif %}
+
+        <div style="text-align: center;">
+            <a href="{{ url('app_produit_show', {'id': produit.id}) }}" class="btn">Voir le produit</a>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>© 2025 Université Gamal Abdel Nasser de Conakry - Centre Informatique</p>
+        <p>Email automatique - Système de Gestion de Stock</p>
+    </div>
+</body>
+</html>

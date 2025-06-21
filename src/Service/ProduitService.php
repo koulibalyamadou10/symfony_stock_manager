@@ -8,7 +8,9 @@ use Doctrine\ORM\EntityManagerInterface;
 class ProduitService
 {
     public function __construct(
-        private EntityManagerInterface $entityManager
+        private EntityManagerInterface $entityManager,
+        private EmailService $emailService,
+        private StockAlertService $stockAlertService
     ) {}
 
     /**
@@ -24,6 +26,16 @@ class ProduitService
         
         if ($success) {
             $this->entityManager->flush();
+            
+            // Envoyer une notification de vente au propriétaire
+            try {
+                $this->emailService->envoyerNotificationVente($produit, $quantite, $this->getCurrentUser());
+            } catch (\Exception $e) {
+                // Log l'erreur mais ne pas faire échouer la vente
+            }
+            
+            // Vérifier si des alertes de stock doivent être envoyées
+            $this->stockAlertService->verifierEtEnvoyerAlertes();
         }
 
         return $success;
@@ -38,5 +50,15 @@ class ProduitService
             $produit->setActif(true);
             $this->entityManager->flush();
         }
+    }
+
+    /**
+     * Récupère l'utilisateur actuel (à adapter selon votre contexte)
+     */
+    private function getCurrentUser()
+    {
+        // Cette méthode devrait récupérer l'utilisateur connecté
+        // Pour simplifier, on retourne null ici
+        return null;
     }
 }

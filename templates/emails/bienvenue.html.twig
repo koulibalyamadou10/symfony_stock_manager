@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienvenue</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+        }
+        .content {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 0 0 10px 10px;
+        }
+        .btn {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎉 Bienvenue {{ user.nom }} !</h1>
+        <p>Votre compte a été créé avec succès</p>
+    </div>
+    
+    <div class="content">
+        <h2>Félicitations !</h2>
+        <p>Votre inscription sur la plateforme de <strong>Gestion de Stock</strong> de l'Université Gamal Abdel Nasser de Conakry a été effectuée avec succès.</p>
+        
+        <h3>Vos informations :</h3>
+        <ul>
+            <li><strong>Nom :</strong> {{ user.nom }}</li>
+            <li><strong>Email :</strong> {{ user.email }}</li>
+            <li><strong>Rôle :</strong> 
+                {% if 'ROLE_ADMIN' in user.roles %}
+                    Administrateur
+                {% else %}
+                    Utilisateur
+                {% endif %}
+            </li>
+        </ul>
+
+        <h3>Que pouvez-vous faire maintenant ?</h3>
+        <ul>
+            <li>📦 Ajouter et gérer vos produits</li>
+            <li>📊 Suivre votre stock en temps réel</li>
+            <li>💰 Enregistrer vos ventes</li>
+            {% if 'ROLE_ADMIN' in user.roles %}
+            <li>👥 Gérer les utilisateurs (Admin)</li>
+            <li>🏷️ Créer des catégories (Admin)</li>
+            {% endif %}
+        </ul>
+
+        <div style="text-align: center;">
+            <a href="{{ url('app_login') }}" class="btn">Se connecter maintenant</a>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>© 2025 Université Gamal Abdel Nasser de Conakry - Centre Informatique</p>
+        <p>Projet académique - Licence 3</p>
+    </div>
+</body>
+</html>

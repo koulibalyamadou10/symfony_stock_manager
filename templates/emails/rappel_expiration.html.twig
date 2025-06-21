@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rappel d'expiration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+            color: #212529;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+        }
+        .content {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 0 0 10px 10px;
+        }
+        .warning-box {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .btn {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>⏰ Rappel d'Expiration</h1>
+        <p>Votre abonnement expire bientôt</p>
+    </div>
+    
+    <div class="content">
+        <h2>Bonjour {{ user.nom }},</h2>
+        <p>Nous vous informons que votre abonnement mensuel à l'application de Gestion de Stock expire bientôt.</p>
+        
+        <div class="warning-box">
+            <h3>⚠️ Informations importantes :</h3>
+            <p><strong>Date d'expiration :</strong> {{ subscription.endDate|date('d/m/Y à H:i') }}</p>
+            <p><strong>Temps restant :</strong> 
+                {% set daysLeft = date(subscription.endDate).diff(date()).days %}
+                {{ daysLeft }} jour(s)
+            </p>
+            <p><strong>Montant du renouvellement :</strong> {{ subscription.amount|number_format(0, ',', ' ') }} {{ subscription.currency }}</p>
+        </div>
+
+        <h3>🚨 Que se passe-t-il si vous ne renouvelez pas ?</h3>
+        <ul>
+            <li>❌ Perte d'accès à toutes les fonctionnalités</li>
+            <li>❌ Impossibilité de gérer vos produits</li>
+            <li>❌ Perte des données de suivi des stocks</li>
+            <li>❌ Interruption du support technique</li>
+        </ul>
+
+        <h3>✅ Pour continuer à utiliser l'application :</h3>
+        <p>Renouvelez votre abonnement dès maintenant pour éviter toute interruption de service.</p>
+
+        <div style="text-align: center;">
+            <a href="{{ url('app_subscription_status') }}" class="btn">Renouveler mon abonnement</a>
+        </div>
+
+        <div style="background: #e7f3ff; border: 1px solid #b3d9ff; color: #0066cc; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <strong>💡 Astuce :</strong> Le renouvellement est simple et rapide. 
+            Votre nouvel abonnement commencera automatiquement à la fin de l'actuel.
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>© 2025 Université Gamal Abdel Nasser de Conakry - Centre Informatique</p>
+        <p>Merci de votre fidélité !</p>
+        <p><small>Email envoyé le {{ "now"|date("d/m/Y à H:i") }}</small></p>
+    </div>
+</body>
+</html>

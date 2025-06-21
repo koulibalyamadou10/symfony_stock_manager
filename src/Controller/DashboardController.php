@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Repository\ProduitRepository;
 use App\Repository\CategorieRepository;
 use App\Repository\UserRepository;
+use App\Service\StockAlertService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -15,7 +16,8 @@ class DashboardController extends AbstractController
     public function index(
         ProduitRepository $produitRepository,
         CategorieRepository $categorieRepository,
-        UserRepository $userRepository
+        UserRepository $userRepository,
+        StockAlertService $stockAlertService
     ): Response {
         $user = $this->getUser();
         
@@ -26,6 +28,7 @@ class DashboardController extends AbstractController
             $totalCategories = count($categorieRepository->findAll());
             $totalUtilisateurs = count($userRepository->findAll());
             $ruptureStock = $produitRepository->findRuptureStock();
+            $produitsStockCritique = $stockAlertService->getProduitsStockCritique();
             
             return $this->render('dashboard/admin.html.twig', [
                 'totalProduits' => $totalProduits,
@@ -33,6 +36,7 @@ class DashboardController extends AbstractController
                 'totalCategories' => $totalCategories,
                 'totalUtilisateurs' => $totalUtilisateurs,
                 'ruptureStock' => $ruptureStock,
+                'produitsStockCritique' => $produitsStockCritique,
             ]);
         } else {
             // Tableau de bord pour utilisateur simple

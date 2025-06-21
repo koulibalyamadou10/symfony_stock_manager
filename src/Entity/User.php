@@ -49,6 +49,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Produit::class, mappedBy: 'utilisateur')]
     private Collection $produits;
 
+    #[ORM\OneToOne(mappedBy: 'user', cascade: ['persist', 'remove'])]
+    private ?Subscription $subscription = null;
+
     public function __construct()
     {
         $this->produits = new ArrayCollection();
@@ -167,6 +170,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
                 $produit->setUtilisateur(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getSubscription(): ?Subscription
+    {
+        return $this->subscription;
+    }
+
+    public function setSubscription(Subscription $subscription): static
+    {
+        // set the owning side of the relation if necessary
+        if ($subscription->getUser() !== $this) {
+            $subscription->setUser($this);
+        }
+
+        $this->subscription = $subscription;
 
         return $this;
     }

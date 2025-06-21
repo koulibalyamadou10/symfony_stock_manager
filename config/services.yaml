@@ -22,3 +22,15 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    # Configuration Lengo Pay
+    App\Service\LengoPayService:
+        arguments:
+            $lengoPayLicenseKey: '%env(LENGO_PAY_LICENSE_KEY)%'
+            $lengoPayWebsiteId: '%env(LENGO_PAY_WEBSITE_ID)%'
+            $lengoPayApiUrl: '%env(LENGO_PAY_API_URL)%'
+            $lengoPayCurrency: '%env(LENGO_PAY_CURRENCY)%'
+
+    App\Service\SubscriptionService:
+        arguments:
+            $subscriptionAmount: '%env(float:SUBSCRIPTION_AMOUNT)%'

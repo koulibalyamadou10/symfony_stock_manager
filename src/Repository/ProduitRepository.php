@@ -70,6 +70,21 @@ class ProduitRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * Trouve les produits avec un stock faible (inférieur ou égal au seuil)
+     */
+    public function findProduitsStockFaible(int $seuil = 5): array
+    {
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.quantite <= :seuil')
+            ->andWhere('p.actif = :actif')
+            ->setParameter('seuil', $seuil)
+            ->setParameter('actif', true)
+            ->orderBy('p.quantite', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     //    /**
     //     * @return Produit[] Returns an array of Produit objects
     //     */

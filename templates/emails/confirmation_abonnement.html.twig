@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmation d'abonnement</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+        }
+        .content {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 0 0 10px 10px;
+        }
+        .subscription-box {
+            background: white;
+            border: 2px solid #28a745;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .btn {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>✅ Abonnement Confirmé</h1>
+        <p>Votre paiement a été traité avec succès</p>
+    </div>
+    
+    <div class="content">
+        <h2>Bonjour {{ user.nom }},</h2>
+        <p>Félicitations ! Votre abonnement mensuel à l'application de Gestion de Stock a été activé avec succès.</p>
+        
+        <div class="subscription-box">
+            <h3>📋 Détails de votre abonnement :</h3>
+            <p><strong>Montant payé :</strong> {{ subscription.amount|number_format(0, ',', ' ') }} {{ subscription.currency }}</p>
+            <p><strong>Date d'activation :</strong> {{ subscription.startDate|date('d/m/Y à H:i') }}</p>
+            <p><strong>Date d'expiration :</strong> {{ subscription.endDate|date('d/m/Y à H:i') }}</p>
+            <p><strong>Statut :</strong> <span style="color: #28a745; font-weight: bold;">ACTIF</span></p>
+            {% if subscription.paymentId %}
+            <p><strong>ID de transaction :</strong> {{ subscription.paymentId }}</p>
+            {% endif %}
+        </div>
+
+        <h3>🎯 Vous avez maintenant accès à :</h3>
+        <ul>
+            <li>✅ Gestion complète de vos produits</li>
+            <li>✅ Suivi des stocks en temps réel</li>
+            <li>✅ Enregistrement des ventes</li>
+            <li>✅ Rapports et statistiques détaillés</li>
+            <li>✅ Support technique prioritaire</li>
+        </ul>
+
+        <div style="background: #e7f3ff; border: 1px solid #b3d9ff; color: #0066cc; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <strong>💡 Rappel :</strong> Votre abonnement se renouvelle automatiquement chaque mois. 
+            Vous recevrez un rappel 7 jours avant l'expiration.
+        </div>
+
+        <div style="text-align: center;">
+            <a href="{{ url('app_dashboard') }}" class="btn">Accéder à l'application</a>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>© 2025 Université Gamal Abdel Nasser de Conakry - Centre Informatique</p>
+        <p>Merci de votre confiance !</p>
+        <p><small>Paiement traité le {{ subscription.paidAt|date("d/m/Y à H:i") }}</small></p>
+    </div>
+</body>
+</html>

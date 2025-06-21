@@ -63,8 +63,8 @@
             <h3>📦 Détails de la vente :</h3>
             <p><strong>Produit :</strong> {{ produit.nom }}</p>
             <p><strong>Quantité vendue :</strong> {{ quantiteVendue }} unité(s)</p>
-            <p><strong>Prix unitaire :</strong> {{ produit.prix }}€</p>
-            <p><strong>Total de la vente :</strong> <span style="color: #28a745; font-size: 1.2em; font-weight: bold;">{{ (produit.prix * quantiteVendue)|number_format(2, ',', ' ') }}€</span></p>
+            <p><strong>Prix unitaire :</strong> {{ produit.prix }}GNF</p>
+            <p><strong>Total de la vente :</strong> <span style="color: #28a745; font-size: 1.2em; font-weight: bold;">{{ (produit.prix * quantiteVendue)|number_format(2, ',', ' ') }}GNF</span></p>
             <p><strong>Stock restant :</strong> {{ produit.quantite }} unité(s)</p>
             <p><strong>Vendu par :</strong> {{ vendeur.nom }}</p>
             <p><strong>Date :</strong> {{ "now"|date("d/m/Y à H:i") }}</p>

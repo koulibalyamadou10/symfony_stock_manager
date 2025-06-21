@@ -49,12 +49,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Produit::class, mappedBy: 'utilisateur')]
     private Collection $produits;
 
-    #[ORM\OneToOne(mappedBy: 'user', cascade: ['persist', 'remove'])]
-    private ?Subscription $subscription = null;
+    /**
+     * @var Collection<int, Abonnement>
+     */
+    #[ORM\OneToMany(targetEntity: Abonnement::class, mappedBy: 'utilisateur')]
+    private Collection $abonnements;
 
     public function __construct()
     {
         $this->produits = new ArrayCollection();
+        $this->abonnements = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -174,21 +178,92 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getSubscription(): ?Subscription
+    /**
+     * @return Collection<int, Abonnement>
+     */
+    public function getAbonnements(): Collection
     {
-        return $this->subscription;
+        return $this->abonnements;
     }
 
-    public function setSubscription(Subscription $subscription): static
+    public function addAbonnement(Abonnement $abonnement): static
     {
-        // set the owning side of the relation if necessary
-        if ($subscription->getUser() !== $this) {
-            $subscription->setUser($this);
+        if (!$this->abonnements->contains($abonnement)) {
+            $this->abonnements->add($abonnement);
+            $abonnement->setUtilisateur($this);
         }
 
-        $this->subscription = $subscription;
+        return $this;
+    }
+
+    public function removeAbonnement(Abonnement $abonnement): static
+    {
+        if ($this->abonnements->removeElement($abonnement)) {
+            // set the owning side to null (unless already changed)
+            if ($abonnement->getUtilisateur() === $this) {
+                $abonnement->setUtilisateur(null);
+            }
+        }
 
         return $this;
+    }
+
+    /**
+     * Récupère l'abonnement actif de l'utilisateur
+     */
+    public function getAbonnementActif(): ?Abonnement
+    {
+        foreach ($this->abonnements as $abonnement) {
+            if ($abonnement->isEstActif() && $abonnement->getDateFin() > new \DateTime()) {
+                return $abonnement;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Vérifie si l'utilisateur a un abonnement actif
+     */
+    public function hasAbonnementActif(): bool
+    {
+        return $this->getAbonnementActif() !== null;
+    }
+
+    /**
+     * Vérifie si l'abonnement expire bientôt (dans les 3 jours)
+     */
+    public function hasAbonnementExpirantBientot(): bool
+    {
+        $abonnement = $this->getAbonnementActif();
+        if (!$abonnement) {
+            return false;
+        }
+
+        $dateLimite = (new \DateTime())->modify('+3 days');
+        return $abonnement->getDateFin() <= $dateLimite;
+    }
+
+    /**
+     * Récupère la date d'expiration de l'abonnement actif
+     */
+    public function getDateExpirationAbonnement(): ?\DateTimeInterface
+    {
+        $abonnement = $this->getAbonnementActif();
+        return $abonnement ? $abonnement->getDateFin() : null;
+    }
+
+    /**
+     * Vérifie si l'utilisateur peut accéder aux fonctionnalités premium
+     */
+    public function canAccessPremiumFeatures(): bool
+    {
+        // Les admins ont toujours accès
+        if (in_array('ROLE_ADMIN', $this->getRoles())) {
+            return true;
+        }
+
+        // Les autres utilisateurs doivent avoir un abonnement actif
+        return $this->hasAbonnementActif();
     }
 
     public function __toString(): string

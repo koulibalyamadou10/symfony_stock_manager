@@ -83,6 +83,22 @@ class EmailService
         $this->mailer->send($email);
     }
 
+    public function sendExpirationNotification(string $to, string $name, \DateTimeInterface $dateExpiration): void
+    {
+        $htmlContent = $this->twig->render('emails/expiration.html.twig', [
+            'nom' => $name,
+            'dateExpiration' => $dateExpiration,
+        ]);
+
+        $email = (new Email())
+            ->from(new Address($this->senderEmail, $this->senderName))
+            ->to($to)
+            ->subject('Votre abonnement expire bientôt - Gestion de Stock')
+            ->html($htmlContent);
+
+        $this->mailer->send($email);
+    }
+
     public function envoyerEmailBienvenue(User $user): void
     {
         $htmlContent = $this->twig->render('emails/bienvenue.html.twig', [

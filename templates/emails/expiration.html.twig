@@ -1,0 +1,41 @@
+{% extends 'emails/base.html.twig' %}
+
+{% block header %}
+    Votre abonnement expire bientôt
+{% endblock %}
+
+{% block content %}
+    <h2>Bonjour {{ nom }} !</h2>
+    
+    <div class="info">
+        <p>Nous vous informons que votre abonnement à l'application de gestion de stock expire le 
+        <strong>{{ dateExpiration|date('d/m/Y') }}</strong>.</p>
+    </div>
+
+    <div class="warning">
+        <p><strong>Important :</strong> Pour éviter toute interruption de service, nous vous recommandons 
+        de renouveler votre abonnement avant la date d'expiration.</p>
+    </div>
+
+    <div class="content">
+        <h3>Détails de l'abonnement</h3>
+        <ul>
+            <li>Montant mensuel : <strong>50 000 GNF</strong></li>
+            <li>Date d'expiration : {{ dateExpiration|date('d/m/Y') }}</li>
+            <li>Jours restants : {{ dateExpiration|date('U')|date_modify('-now'|date('U') ~ ' seconds')|date('%a') }}</li>
+        </ul>
+
+        <p>Pour renouveler votre abonnement, cliquez sur le bouton ci-dessous :</p>
+        
+        <p style="text-align: center;">
+            <a href="{{ url('app_abonnement_souscrire') }}" class="button">
+                Renouveler mon abonnement
+            </a>
+        </p>
+    </div>
+
+    <div class="info" style="margin-top: 20px;">
+        <p><small>Si vous ne souhaitez pas renouveler votre abonnement, votre accès sera limité 
+        après la date d'expiration.</small></p>
+    </div>
+{% endblock %}

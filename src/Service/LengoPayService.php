@@ -2,169 +2,169 @@
 
 namespace App\Service;
 
-use Psr\Log\LoggerInterface;
-use Symfony\Component\HttpClient\HttpClient;
+use App\Entity\Abonnement;
+use App\Entity\User;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Psr\Log\LoggerInterface;
 
 class LengoPayService
 {
-    private HttpClientInterface $httpClient;
-    private string $licenseKey;
-    private string $websiteId;
-    private string $apiUrl;
-    private string $currency;
-    private LoggerInterface $logger;
+    private string $apiKey;
+    private string $merchantId;
+    private const API_BASE_URL = 'https://api.lengopay.com/v1';
 
     public function __construct(
-        string $lengoPayLicenseKey,
-        string $lengoPayWebsiteId,
-        string $lengoPayApiUrl,
-        string $lengoPayCurrency,
-        LoggerInterface $logger
+        private HttpClientInterface $httpClient,
+        private LoggerInterface $logger,
+        private ParameterBagInterface $params
     ) {
-        $this->httpClient = HttpClient::create();
-        $this->licenseKey = $lengoPayLicenseKey;
-        $this->websiteId = $lengoPayWebsiteId;
-        $this->apiUrl = $lengoPayApiUrl;
-        $this->currency = $lengoPayCurrency;
-        $this->logger = $logger;
+        $this->apiKey = $this->params->get('lengo_pay_api_key');
+        $this->merchantId = $this->params->get('lengo_pay_merchant_id');
     }
 
     /**
-     * Crée une URL de paiement via l'API Lengo Pay
+     * Crée une transaction pour un nouvel abonnement
      */
-    public function createPaymentUrl(
-        float $amount,
-        string $returnUrl = null,
-        string $callbackUrl = null
-    ): array {
-        try {
-            $payload = [
-                'websiteid' => $this->websiteId,
-                'amount' => $amount,
-                'currency' => $this->currency,
-            ];
-
-            if ($returnUrl) {
-                $payload['return_url'] = $returnUrl;
-            }
-
-            if ($callbackUrl) {
-                $payload['callback_url'] = $callbackUrl;
-            }
-
-            $this->logger->info('Création d\'une URL de paiement Lengo Pay', [
-                'amount' => $amount,
-                'currency' => $this->currency,
-                'websiteId' => $this->websiteId
-            ]);
-
-            $response = $this->httpClient->request('POST', $this->apiUrl, [
-                'headers' => [
-                    'Authorization' => 'Basic ' . $this->licenseKey,
-                    'Accept' => 'application/json',
-                    'Content-Type' => 'application/json',
-                ],
-                'json' => $payload,
-            ]);
-
-            $statusCode = $response->getStatusCode();
-            $content = $response->toArray();
-
-            if ($statusCode === 200 && isset($content['status']) && $content['status'] === 'success') {
-                $this->logger->info('URL de paiement créée avec succès', [
-                    'pay_id' => $content['pay_id'] ?? null,
-                    'payment_url' => $content['payment_url'] ?? null
-                ]);
-
-                return [
-                    'success' => true,
-                    'pay_id' => $content['pay_id'] ?? null,
-                    'payment_url' => $content['payment_url'] ?? null,
-                    'data' => $content
-                ];
-            } else {
-                $this->logger->error('Erreur lors de la création de l\'URL de paiement', [
-                    'status_code' => $statusCode,
-                    'response' => $content
-                ]);
-
-                return [
-                    'success' => false,
-                    'error' => 'Erreur lors de la création du paiement',
-                    'details' => $content
-                ];
-            }
-        } catch (\Exception $e) {
-            $this->logger->error('Exception lors de l\'appel à l\'API Lengo Pay', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return [
-                'success' => false,
-                'error' => 'Erreur de communication avec Lengo Pay: ' . $e->getMessage()
-            ];
-        }
-    }
-
-    /**
-     * Vérifie le statut d'un paiement
-     */
-    public function verifyPayment(string $payId): array
+    public function creerTransaction(User $user, float $montant): array
     {
         try {
-            // Note: Cette méthode nécessiterait un endpoint de vérification de Lengo Pay
-            // Pour l'instant, nous nous basons sur les callbacks
+            $response = $this->httpClient->request('POST', self::API_BASE_URL . '/transactions', [
+                'headers' => $this->getHeaders(),
+                'json' => [
+                    'amount' => $montant,
+                    'currency' => 'GNF',
+                    'merchant_id' => $this->merchantId,
+                    'description' => 'Abonnement mensuel - Gestion de Stock',
+                    'callback_url' => $this->params->get('app.url') . '/abonnement/confirmation',
+                    'customer' => [
+                        'name' => $user->getNom(),
+                        'email' => $user->getEmail()
+                    ],
+                    'metadata' => [
+                        'user_id' => $user->getId(),
+                        'type' => 'abonnement_mensuel'
+                    ]
+                ]
+            ]);
+
+            $data = $response->toArray();
             
-            $this->logger->info('Vérification du paiement', ['pay_id' => $payId]);
-
-            return [
-                'success' => true,
-                'status' => 'verified'
-            ];
-        } catch (\Exception $e) {
-            $this->logger->error('Erreur lors de la vérification du paiement', [
-                'pay_id' => $payId,
-                'error' => $e->getMessage()
+            $this->logger->info('Transaction Lengo Pay créée', [
+                'transaction_id' => $data['id'],
+                'user_id' => $user->getId(),
+                'montant' => $montant
             ]);
 
-            return [
-                'success' => false,
-                'error' => $e->getMessage()
-            ];
+            return $data;
+
+        } catch (\Exception $e) {
+            $this->logger->error('Erreur lors de la création de la transaction Lengo Pay', [
+                'error' => $e->getMessage(),
+                'user_id' => $user->getId()
+            ]);
+            throw $e;
         }
     }
 
     /**
-     * Traite un callback de Lengo Pay
+     * Vérifie le statut d'une transaction
      */
-    public function processCallback(array $callbackData): array
+    public function verifierTransaction(string $transactionId): array
     {
         try {
-            $this->logger->info('Traitement du callback Lengo Pay', $callbackData);
-
-            // Validation des données du callback
-            if (!isset($callbackData['pay_id']) || !isset($callbackData['status'])) {
-                throw new \InvalidArgumentException('Données de callback invalides');
-            }
-
-            return [
-                'success' => true,
-                'pay_id' => $callbackData['pay_id'],
-                'status' => $callbackData['status'],
-                'data' => $callbackData
-            ];
-        } catch (\Exception $e) {
-            $this->logger->error('Erreur lors du traitement du callback', [
-                'error' => $e->getMessage(),
-                'callback_data' => $callbackData
+            $response = $this->httpClient->request('GET', self::API_BASE_URL . '/transactions/' . $transactionId, [
+                'headers' => $this->getHeaders()
             ]);
 
-            return [
-                'success' => false,
-                'error' => $e->getMessage()
-            ];
+            return $response->toArray();
+
+        } catch (\Exception $e) {
+            $this->logger->error('Erreur lors de la vérification de la transaction', [
+                'error' => $e->getMessage(),
+                'transaction_id' => $transactionId
+            ]);
+            throw $e;
         }
+    }
+
+    /**
+     * Vérifie si une transaction est valide pour un abonnement
+     */
+    public function validerTransactionAbonnement(string $transactionId, Abonnement $abonnement): bool
+    {
+        try {
+            $transaction = $this->verifierTransaction($transactionId);
+
+            // Vérifier que la transaction est réussie et correspond au bon montant
+            if ($transaction['status'] !== 'completed') {
+                $this->logger->warning('Transaction non complétée', [
+                    'transaction_id' => $transactionId,
+                    'status' => $transaction['status']
+                ]);
+                return false;
+            }
+
+            if ($transaction['amount'] != $abonnement->getMontant()) {
+                $this->logger->warning('Montant de la transaction incorrect', [
+                    'transaction_id' => $transactionId,
+                    'montant_attendu' => $abonnement->getMontant(),
+                    'montant_recu' => $transaction['amount']
+                ]);
+                return false;
+            }
+
+            // Vérifier que la transaction correspond au bon utilisateur
+            if ($transaction['metadata']['user_id'] != $abonnement->getUtilisateur()->getId()) {
+                $this->logger->warning('Utilisateur de la transaction incorrect', [
+                    'transaction_id' => $transactionId,
+                    'user_id_attendu' => $abonnement->getUtilisateur()->getId(),
+                    'user_id_recu' => $transaction['metadata']['user_id']
+                ]);
+                return false;
+            }
+
+            return true;
+
+        } catch (\Exception $e) {
+            $this->logger->error('Erreur lors de la validation de la transaction', [
+                'error' => $e->getMessage(),
+                'transaction_id' => $transactionId,
+                'abonnement_id' => $abonnement->getId()
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Génère les en-têtes pour les requêtes API
+     */
+    private function getHeaders(): array
+    {
+        return [
+            'Authorization' => 'Bearer ' . $this->apiKey,
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json'
+        ];
+    }
+
+    /**
+     * Génère une référence unique pour une transaction
+     */
+    public function genererReference(): string
+    {
+        return uniqid('ABO-', true);
+    }
+
+    /**
+     * Récupère l'URL de paiement pour une transaction
+     */
+    public function getUrlPaiement(string $transactionId): string
+    {
+        return sprintf(
+            'https://checkout.lengopay.com/pay/%s?merchant_id=%s',
+            $transactionId,
+            $this->merchantId
+        );
     }
 }

@@ -1,0 +1,139 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Statistiques des abonnements{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">
+                <i class="bi bi-graph-up"></i> Statistiques des abonnements
+            </h1>
+        </div>
+    </div>
+
+    <!-- Cartes de statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-people"></i> Abonnements actifs
+                    </h5>
+                    <h2 class="display-4">{{ stats.abonnements_actifs }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-clock-history"></i> Expirés ce mois
+                    </h5>
+                    <h2 class="display-4">{{ stats.expires_ce_mois }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-cash"></i> Revenus du mois
+                    </h5>
+                    <h2 class="display-4">{{ stats.revenus_mois_formate }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Graphique des abonnements -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Évolution des abonnements</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="abonnementsChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tableau des derniers abonnements -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Derniers abonnements</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Utilisateur</th>
+                                    <th>Date début</th>
+                                    <th>Date fin</th>
+                                    <th>Montant</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for abonnement in derniers_abonnements %}
+                                    <tr>
+                                        <td>{{ abonnement.utilisateur.nom }}</td>
+                                        <td>{{ abonnement.dateDebut|date('d/m/Y') }}</td>
+                                        <td>{{ abonnement.dateFin|date('d/m/Y') }}</td>
+                                        <td>{{ abonnement.montant|number_format(0, ',', ' ') }} GNF</td>
+                                        <td>
+                                            {% if abonnement.estActif and abonnement.dateFin > date() %}
+                                                <span class="badge bg-success">Actif</span>
+                                            {% elseif abonnement.dateFin < date() %}
+                                                <span class="badge bg-danger">Expiré</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">En attente</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block javascripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('abonnementsChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ dates|json_encode|raw }},
+            datasets: [{
+                label: 'Abonnements actifs',
+                data: {{ abonnements_data|json_encode|raw }},
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

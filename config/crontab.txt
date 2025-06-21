@@ -1,0 +1,5 @@
+# Vérification quotidienne des abonnements expirés à minuit
+0 0 * * * cd /path/to/project && php bin/console app:desactiver-abonnements-expires >> var/log/cron.log 2>&1
+
+# Vérification des abonnements qui expirent bientôt (tous les jours à 8h)
+0 8 * * * cd /path/to/project && php bin/console app:desactiver-abonnements-expires >> var/log/cron.log 2>&1

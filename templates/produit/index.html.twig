@@ -31,7 +31,7 @@
                 <div class="card-body">
                     <p class="card-text">
                         <strong>Catégorie:</strong> {{ produit.categorie.nom }}<br>
-                        <strong>Prix:</strong> {{ produit.prix }}€<br>
+                        <strong>Prix:</strong> {{ produit.prix }}GNF<br>
                         <strong>Stock:</strong> 
                         <span class="badge bg-{{ produit.quantite > 5 ? 'success' : (produit.quantite > 0 ? 'warning' : 'danger') }}">
                             {{ produit.quantite }}

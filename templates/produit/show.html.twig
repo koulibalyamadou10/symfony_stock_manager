@@ -38,7 +38,7 @@
                                 </tr>
                                 <tr>
                                     <td><strong>Prix:</strong></td>
-                                    <td class="text-success fs-5">{{ produit.prix }}€</td>
+                                    <td class="text-success fs-5">{{ produit.prix }}GNF</td>
                                 </tr>
                                 <tr>
                                     <td><strong>Quantité en stock:</strong></td>
@@ -109,7 +109,7 @@
                 <div class="card-body">
                     <div class="text-center">
                         <div class="mb-3">
-                            <h4 class="text-primary">{{ produit.prix * produit.quantite }}€</h4>
+                            <h4 class="text-primary">{{ produit.prix * produit.quantite }}GNF</h4>
                             <small class="text-muted">Valeur totale du stock</small>
                         </div>
                         
@@ -149,8 +149,8 @@
                         <div class="form-text">Stock disponible: {{ produit.quantite }}</div>
                     </div>
                     <div class="alert alert-info">
-                        <strong>Prix unitaire:</strong> {{ produit.prix }}€<br>
-                        <strong>Total estimé:</strong> <span id="total">{{ produit.prix }}€</span>
+                        <strong>Prix unitaire:</strong> {{ produit.prix }}GNF<br>
+                        <strong>Total estimé:</strong> <span id="total">{{ produit.prix }}GNF</span>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -167,7 +167,7 @@ document.getElementById('quantite').addEventListener('input', function() {
     const quantite = this.value;
     const prix = {{ produit.prix }};
     const total = quantite * prix;
-    document.getElementById('total').textContent = total.toFixed(2) + '€';
+    document.getElementById('total').textContent = total.toFixed(2) + 'GNF';
 });
 </script>
 {% endif %}

@@ -1,0 +1,226 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tableau de bord - Abonnements{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">
+                <i class="bi bi-speedometer2"></i> Tableau de bord - Abonnements
+            </h1>
+        </div>
+    </div>
+
+    <!-- Actions rapides -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-lightning"></i> Actions rapides</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ path('app_abonnement_statistiques') }}" class="btn btn-primary w-100">
+                                <i class="bi bi-graph-up"></i> Statistiques détaillées
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ path('app_abonnement_export') }}" class="btn btn-success w-100">
+                                <i class="bi bi-download"></i> Exporter CSV
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button onclick="executerVerification()" class="btn btn-warning w-100">
+                                <i class="bi bi-arrow-clockwise"></i> Vérifier abonnements
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ path('app_user_index') }}" class="btn btn-info w-100">
+                                <i class="bi bi-people"></i> Gérer utilisateurs
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques rapides -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-check-circle display-4 mb-3"></i>
+                    <h3>{{ stats.abonnements_actifs }}</h3>
+                    <p class="mb-0">Abonnements actifs</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <i class="bi bi-exclamation-triangle display-4 mb-3"></i>
+                    <h3>{{ abonnements_expirant|length }}</h3>
+                    <p class="mb-0">Expirent bientôt</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-x-circle display-4 mb-3"></i>
+                    <h3>{{ stats.expires_ce_mois }}</h3>
+                    <p class="mb-0">Expirés ce mois</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-cash display-4 mb-3"></i>
+                    <h3>{{ stats.revenus_mois_formate }}</h3>
+                    <p class="mb-0">Revenus du mois</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Abonnements qui expirent bientôt -->
+    {% if abonnements_expirant|length > 0 %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="bi bi-exclamation-triangle"></i> 
+                        Abonnements expirant bientôt ({{ abonnements_expirant|length }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Ces abonnements expirent dans les 3 prochains jours.</p>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Utilisateur</th>
+                                    <th>Email</th>
+                                    <th>Date d'expiration</th>
+                                    <th>Jours restants</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for abonnement in abonnements_expirant %}
+                                    {% set jours_restants = date(abonnement.dateFin).diff(date()).days %}
+                                    <tr>
+                                        <td>{{ abonnement.utilisateur.nom }}</td>
+                                        <td>{{ abonnement.utilisateur.email }}</td>
+                                        <td>{{ abonnement.dateFin|date('d/m/Y') }}</td>
+                                        <td>
+                                            <span class="badge bg-{{ jours_restants <= 1 ? 'danger' : 'warning' }}">
+                                                {{ jours_restants }} jour(s)
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button onclick="envoyerRappel({{ abonnement.id }})" 
+                                                    class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-envelope"></i> Rappel
+                                            </button>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Graphique simple -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Aperçu des abonnements</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <div class="progress mb-3" style="height: 20px;">
+                                {% set total = stats.abonnements_actifs + stats.expires_ce_mois %}
+                                {% set pourcentage_actifs = total > 0 ? (stats.abonnements_actifs / total * 100) : 0 %}
+                                <div class="progress-bar bg-success" style="width: {{ pourcentage_actifs }}%"></div>
+                            </div>
+                            <p>Taux d'abonnements actifs: {{ pourcentage_actifs|round }}%</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h4 class="text-primary">{{ stats.abonnements_actifs }}</h4>
+                            <p>Utilisateurs avec abonnement</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h4 class="text-success">{{ stats.revenus_mois_formate }}</h4>
+                            <p>Revenus ce mois</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmation -->
+<div class="modal fade" id="confirmationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="modalMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" id="confirmButton">Confirmer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block javascripts %}
+<script>
+function executerVerification() {
+    document.getElementById('modalMessage').textContent = 
+        'Voulez-vous exécuter la vérification des abonnements expirés ?';
+    
+    document.getElementById('confirmButton').onclick = function() {
+        // Ici vous pourriez faire un appel AJAX pour exécuter la commande
+        alert('Vérification lancée ! (Fonctionnalité à implémenter)');
+        bootstrap.Modal.getInstance(document.getElementById('confirmationModal')).hide();
+    };
+    
+    new bootstrap.Modal(document.getElementById('confirmationModal')).show();
+}
+
+function envoyerRappel(abonnementId) {
+    document.getElementById('modalMessage').textContent = 
+        'Voulez-vous envoyer un rappel d\'expiration à cet utilisateur ?';
+    
+    document.getElementById('confirmButton').onclick = function() {
+        // Ici vous pourriez faire un appel AJAX pour envoyer le rappel
+        alert('Rappel envoyé ! (Fonctionnalité à implémenter)');
+        bootstrap.Modal.getInstance(document.getElementById('confirmationModal')).hide();
+    };
+    
+    new bootstrap.Modal(document.getElementById('confirmationModal')).show();
+}
+</script>
+{% endblock %}
+{% endblock %}

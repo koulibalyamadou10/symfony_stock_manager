@@ -23,7 +23,7 @@ class ProduitType extends AbstractType
                 'attr' => ['class' => 'form-control']
             ])
             ->add('prix', MoneyType::class, [
-                'label' => 'Prix (€)',
+                'label' => 'Prix (GNF)',
                 'currency' => 'EUR',
                 'attr' => ['class' => 'form-control']
             ])

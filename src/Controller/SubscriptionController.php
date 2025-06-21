@@ -16,13 +16,16 @@ use Psr\Log\LoggerInterface;
 class SubscriptionController extends AbstractController
 {
     private SubscriptionService $subscriptionService;
+    private LengoPayService $lengoPayService;
     private LoggerInterface $logger;
 
     public function __construct(
         SubscriptionService $subscriptionService,
+        LengoPayService $lengoPayService,
         LoggerInterface $logger
     ) {
         $this->subscriptionService = $subscriptionService;
+        $this->lengoPayService = $lengoPayService;
         $this->logger = $logger;
     }
 
@@ -51,17 +54,27 @@ class SubscriptionController extends AbstractController
             return $this->redirectToRoute('app_dashboard');
         }
 
-        $result = $this->subscriptionService->initiatePayment($user);
+        try {
+            $result = $this->subscriptionService->initiatePayment($user);
 
-        if ($result['success']) {
-            $this->logger->info('Redirection vers Lengo Pay', [
+            if ($result['success']) {
+                $this->logger->info('Redirection vers Lengo Pay', [
+                    'user_id' => $user->getId(),
+                    'payment_url' => $result['payment_url']
+                ]);
+
+                return $this->redirect($result['payment_url']);
+            } else {
+                $this->addFlash('error', 'Erreur lors de l\'initiation du paiement: ' . $result['error']);
+                return $this->redirectToRoute('app_subscription_status');
+            }
+        } catch (\Exception $e) {
+            $this->logger->error('Exception lors de l\'initiation du paiement', [
                 'user_id' => $user->getId(),
-                'payment_url' => $result['payment_url']
+                'error' => $e->getMessage()
             ]);
 
-            return $this->redirect($result['payment_url']);
-        } else {
-            $this->addFlash('error', 'Erreur lors de l\'initiation du paiement: ' . $result['error']);
+            $this->addFlash('error', 'Une erreur technique est survenue. Veuillez réessayer.');
             return $this->redirectToRoute('app_subscription_status');
         }
     }
@@ -76,6 +89,20 @@ class SubscriptionController extends AbstractController
                 'pay_id' => $paymentId,
                 'user_id' => $this->getUser()->getId()
             ]);
+
+            // Optionnel: vérifier le statut du paiement
+            try {
+                $paymentStatus = $this->lengoPayService->verifyPayment($paymentId);
+                if (isset($paymentStatus['status']) && in_array($paymentStatus['status'], ['success', 'completed', 'paid'])) {
+                    // Confirmer le paiement si pas déjà fait
+                    $this->subscriptionService->confirmPayment($paymentId);
+                }
+            } catch (\Exception $e) {
+                $this->logger->warning('Erreur lors de la vérification du paiement sur la page de succès', [
+                    'pay_id' => $paymentId,
+                    'error' => $e->getMessage()
+                ]);
+            }
         }
 
         return $this->render('subscription/success.html.twig', [
@@ -89,17 +116,29 @@ class SubscriptionController extends AbstractController
         try {
             $callbackData = json_decode($request->getContent(), true);
             
-            $this->logger->info('Callback reçu de Lengo Pay', $callbackData);
+            $this->logger->info('Callback reçu de Lengo Pay', [
+                'content' => $request->getContent(),
+                'parsed_data' => $callbackData
+            ]);
 
             if (!$callbackData || !isset($callbackData['pay_id'])) {
-                $this->logger->error('Données de callback invalides', ['content' => $request->getContent()]);
+                $this->logger->error('Données de callback invalides', [
+                    'content' => $request->getContent()
+                ]);
                 return new Response('Invalid callback data', 400);
             }
 
             $paymentId = $callbackData['pay_id'];
             $status = $callbackData['status'] ?? 'unknown';
 
-            if ($status === 'success' || $status === 'completed') {
+            $this->logger->info('Traitement du callback', [
+                'pay_id' => $paymentId,
+                'status' => $status
+            ]);
+
+            // Traiter le callback avec Lengo Pay Service
+            if ($this->lengoPayService->processCallback($callbackData)) {
+                // Confirmer le paiement dans notre système
                 $confirmed = $this->subscriptionService->confirmPayment($paymentId, $callbackData);
                 
                 if ($confirmed) {
@@ -110,16 +149,17 @@ class SubscriptionController extends AbstractController
                     return new Response('Payment confirmation failed', 500);
                 }
             } else {
-                $this->logger->warning('Paiement non réussi', [
+                $this->logger->warning('Callback non traité', [
                     'pay_id' => $paymentId,
                     'status' => $status
                 ]);
-                return new Response('Payment not successful', 200);
+                return new Response('Callback not processed', 200);
             }
         } catch (\Exception $e) {
             $this->logger->error('Erreur lors du traitement du callback', [
                 'error' => $e->getMessage(),
-                'content' => $request->getContent()
+                'content' => $request->getContent(),
+                'trace' => $e->getTraceAsString()
             ]);
             
             return new Response('Callback processing error', 500);

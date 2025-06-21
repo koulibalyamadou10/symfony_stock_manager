@@ -43,8 +43,18 @@ class LengoPayService
                 'amount' => $amount,
                 'currency' => $this->currency,
                 'return_url' => $returnUrl,
-                'callback_url' => $callbackUrl
+                'callback_url' => $callbackUrl,
+                'website_id' => $this->websiteId
             ]);
+
+            // Préparer les données selon la documentation Lengo Pay
+            $requestData = [
+                'websiteid' => $this->websiteId,
+                'amount' => (int) $amount, // Convertir en entier pour GNF
+                'currency' => $this->currency,
+                'return_url' => $returnUrl,
+                'callback_url' => $callbackUrl,
+            ];
 
             $response = $this->httpClient->request('POST', $this->apiUrl, [
                 'headers' => [
@@ -52,13 +62,8 @@ class LengoPayService
                     'Accept' => 'application/json',
                     'Content-Type' => 'application/json',
                 ],
-                'json' => [
-                    'websiteid' => $this->websiteId,
-                    'amount' => $amount,
-                    'currency' => $this->currency,
-                    'return_url' => $returnUrl,
-                    'callback_url' => $callbackUrl,
-                ]
+                'json' => $requestData,
+                'timeout' => 30
             ]);
 
             $statusCode = $response->getStatusCode();
@@ -95,7 +100,7 @@ class LengoPayService
 
             return [
                 'success' => false,
-                'error' => 'Erreur de communication avec le service de paiement'
+                'error' => 'Erreur de communication avec le service de paiement: ' . $e->getMessage()
             ];
         }
     }
@@ -112,7 +117,8 @@ class LengoPayService
                 'headers' => [
                     'Authorization' => 'Basic ' . base64_encode($this->licenseKey),
                     'Accept' => 'application/json',
-                ]
+                ],
+                'timeout' => 30
             ]);
 
             $data = $response->toArray();
@@ -148,9 +154,34 @@ class LengoPayService
             return false;
         }
 
-        // Ici vous pourriez ajouter une validation de signature si Lengo Pay la fournit
-        // Pour l'instant, on fait une validation basique
+        // Log pour debug
+        $this->logger->info('Validation du callback', $callbackData);
 
         return true;
+    }
+
+    /**
+     * Traite le callback de paiement
+     */
+    public function processCallback(array $callbackData): bool
+    {
+        if (!$this->validateCallback($callbackData)) {
+            return false;
+        }
+
+        $payId = $callbackData['pay_id'];
+        $status = $callbackData['status'];
+
+        $this->logger->info('Traitement du callback', [
+            'pay_id' => $payId,
+            'status' => $status
+        ]);
+
+        // Vérifier le statut du paiement
+        if (in_array($status, ['success', 'completed', 'paid'])) {
+            return true;
+        }
+
+        return false;
     }
 }

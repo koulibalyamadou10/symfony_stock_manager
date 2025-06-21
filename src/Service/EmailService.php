@@ -8,6 +8,7 @@ use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Mime\Address;
 use Twig\Environment;
+use Psr\Log\LoggerInterface;
 
 class EmailService
 {
@@ -15,43 +16,63 @@ class EmailService
     private string $senderEmail;
     private string $senderName;
 
-    public function __construct(MailerInterface $mailer, private Environment $twig)
-    {
+    public function __construct(
+        MailerInterface $mailer, 
+        private Environment $twig,
+        private LoggerInterface $logger
+    ) {
         $this->mailer = $mailer;
-        $this->senderEmail = 'contact@morykoulibaly.me';
-        $this->senderName = 'Gestion de Stock';
+        $this->senderEmail = 'noreply@gestionstock.com';
+        $this->senderName = 'Gestion de Stock - UGANC';
     }
 
     public function sendWelcomeEmail(string $to, string $name): void
     {
-        $email = (new Email())
-            ->from(new Address($this->senderEmail, $this->senderName))
-            ->to($to)
-            ->subject('Bienvenue sur l\'application de Gestion de Stock')
-            ->html($this->getWelcomeTemplate($name));
+        try {
+            $htmlContent = $this->twig->render('emails/bienvenue.html.twig', [
+                'user' => (object) ['nom' => $name, 'email' => $to]
+            ]);
 
-        $this->mailer->send($email);
+            $email = (new Email())
+                ->from(new Address($this->senderEmail, $this->senderName))
+                ->to($to)
+                ->subject('Bienvenue sur l\'application de Gestion de Stock')
+                ->html($htmlContent);
+
+            $this->mailer->send($email);
+            
+            $this->logger->info('Email de bienvenue envoyé', [
+                'to' => $to,
+                'name' => $name
+            ]);
+
+        } catch (\Exception $e) {
+            $this->logger->error('Erreur lors de l\'envoi de l\'email de bienvenue', [
+                'to' => $to,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
     }
 
     public function sendPasswordResetEmail(string $to, string $resetLink): void
     {
-        $email = (new Email())
-            ->from(new Address($this->senderEmail, $this->senderName))
-            ->to($to)
-            ->subject('Réinitialisation de votre mot de passe')
-            ->html($this->getPasswordResetTemplate($resetLink));
+        try {
+            $email = (new Email())
+                ->from(new Address($this->senderEmail, $this->senderName))
+                ->to($to)
+                ->subject('Réinitialisation de votre mot de passe')
+                ->html($this->getPasswordResetTemplate($resetLink));
 
-        $this->mailer->send($email);
-    }
+            $this->mailer->send($email);
 
-    private function getWelcomeTemplate(string $name): string
-    {
-        return "
-            <h1>Bienvenue {$name} !</h1>
-            <p>Votre compte a été créé avec succès sur notre application de gestion de stock.</p>
-            <p>Vous pouvez maintenant vous connecter et commencer à utiliser l'application.</p>
-            <p>Cordialement,<br>L'équipe de Gestion de Stock</p>
-        ";
+        } catch (\Exception $e) {
+            $this->logger->error('Erreur lors de l\'envoi de l\'email de réinitialisation', [
+                'to' => $to,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
     }
 
     private function getPasswordResetTemplate(string $resetLink): string
@@ -68,81 +89,127 @@ class EmailService
 
     public function envoyerCredentiels(User $user, string $motDePasse): void
     {
-        $htmlContent = $this->twig->render('emails/credentials.html.twig', [
-            'nom' => $user->getNom(),
-            'email' => $user->getEmail(),
-            'motDePasse' => $motDePasse,
-        ]);
+        try {
+            $htmlContent = $this->twig->render('emails/credentials.html.twig', [
+                'nom' => $user->getNom(),
+                'email' => $user->getEmail(),
+                'motDePasse' => $motDePasse,
+            ]);
 
-        $email = (new Email())
-            ->from(new Address($this->senderEmail, $this->senderName))
-            ->to($user->getEmail())
-            ->subject('Vos identifiants de connexion - Gestion de Stock')
-            ->html($htmlContent);
+            $email = (new Email())
+                ->from(new Address($this->senderEmail, $this->senderName))
+                ->to($user->getEmail())
+                ->subject('Vos identifiants de connexion - Gestion de Stock')
+                ->html($htmlContent);
 
-        $this->mailer->send($email);
+            $this->mailer->send($email);
+
+            $this->logger->info('Identifiants envoyés par email', [
+                'user_id' => $user->getId(),
+                'email' => $user->getEmail()
+            ]);
+
+        } catch (\Exception $e) {
+            $this->logger->error('Erreur lors de l\'envoi des identifiants', [
+                'user_id' => $user->getId(),
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
     }
 
     public function sendExpirationNotification(string $to, string $name, \DateTimeInterface $dateExpiration): void
     {
-        $htmlContent = $this->twig->render('emails/expiration.html.twig', [
-            'nom' => $name,
-            'dateExpiration' => $dateExpiration,
-        ]);
+        try {
+            $htmlContent = $this->twig->render('emails/expiration.html.twig', [
+                'nom' => $name,
+                'dateExpiration' => $dateExpiration,
+            ]);
 
-        $email = (new Email())
-            ->from(new Address($this->senderEmail, $this->senderName))
-            ->to($to)
-            ->subject('Votre abonnement expire bientôt - Gestion de Stock')
-            ->html($htmlContent);
+            $email = (new Email())
+                ->from(new Address($this->senderEmail, $this->senderName))
+                ->to($to)
+                ->subject('Votre abonnement expire bientôt - Gestion de Stock')
+                ->html($htmlContent);
 
-        $this->mailer->send($email);
+            $this->mailer->send($email);
+
+            $this->logger->info('Notification d\'expiration envoyée', [
+                'to' => $to,
+                'expiration_date' => $dateExpiration->format('Y-m-d')
+            ]);
+
+        } catch (\Exception $e) {
+            $this->logger->error('Erreur lors de l\'envoi de la notification d\'expiration', [
+                'to' => $to,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
     }
 
     public function envoyerEmailBienvenue(User $user): void
     {
-        $htmlContent = $this->twig->render('emails/bienvenue.html.twig', [
-            'user' => $user,
-        ]);
-
-        $email = (new Email())
-            ->from(new Address($this->senderEmail, $this->senderName))
-            ->to($user->getEmail())
-            ->subject('Bienvenue sur Gestion de Stock !')
-            ->html($htmlContent);
-
-        $this->mailer->send($email);
+        $this->sendWelcomeEmail($user->getEmail(), $user->getNom());
     }
 
     public function envoyerConfirmationAbonnement(User $user, Subscription $subscription): void
     {
-        $htmlContent = $this->twig->render('emails/confirmation_abonnement.html.twig', [
-            'user' => $user,
-            'subscription' => $subscription,
-        ]);
+        try {
+            $htmlContent = $this->twig->render('emails/confirmation_abonnement.html.twig', [
+                'user' => $user,
+                'subscription' => $subscription,
+            ]);
 
-        $email = (new Email())
-            ->from(new Address($this->senderEmail, $this->senderName))
-            ->to($user->getEmail())
-            ->subject('Confirmation de votre abonnement - Gestion de Stock')
-            ->html($htmlContent);
+            $email = (new Email())
+                ->from(new Address($this->senderEmail, $this->senderName))
+                ->to($user->getEmail())
+                ->subject('Confirmation de votre abonnement - Gestion de Stock')
+                ->html($htmlContent);
 
-        $this->mailer->send($email);
+            $this->mailer->send($email);
+
+            $this->logger->info('Confirmation d\'abonnement envoyée', [
+                'user_id' => $user->getId(),
+                'subscription_id' => $subscription->getId()
+            ]);
+
+        } catch (\Exception $e) {
+            $this->logger->error('Erreur lors de l\'envoi de la confirmation d\'abonnement', [
+                'user_id' => $user->getId(),
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
     }
 
     public function envoyerRappelExpiration(User $user, Subscription $subscription): void
     {
-        $htmlContent = $this->twig->render('emails/rappel_expiration.html.twig', [
-            'user' => $user,
-            'subscription' => $subscription,
-        ]);
+        try {
+            $htmlContent = $this->twig->render('emails/rappel_expiration.html.twig', [
+                'user' => $user,
+                'subscription' => $subscription,
+            ]);
 
-        $email = (new Email())
-            ->from(new Address($this->senderEmail, $this->senderName))
-            ->to($user->getEmail())
-            ->subject('Votre abonnement expire bientôt - Gestion de Stock')
-            ->html($htmlContent);
+            $email = (new Email())
+                ->from(new Address($this->senderEmail, $this->senderName))
+                ->to($user->getEmail())
+                ->subject('Votre abonnement expire bientôt - Gestion de Stock')
+                ->html($htmlContent);
 
-        $this->mailer->send($email);
+            $this->mailer->send($email);
+
+            $this->logger->info('Rappel d\'expiration envoyé', [
+                'user_id' => $user->getId(),
+                'subscription_id' => $subscription->getId()
+            ]);
+
+        } catch (\Exception $e) {
+            $this->logger->error('Erreur lors de l\'envoi du rappel d\'expiration', [
+                'user_id' => $user->getId(),
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
     }
 }
